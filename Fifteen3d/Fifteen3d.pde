@@ -1,13 +1,15 @@
+Controls controls;
 PFont f;
-boolean debug = true;
+boolean debug = false;
+boolean spheres = false;
 // size of whole puzzle
 int boundingSize = 400;
 // eventually will be a reference cube that rotates with the puzzle
 int refSize = 50;
 // reference layer size
 int refLayerSize = 50;
-int initialCubeDim = 3;
-float offset, padding = 60;
+int initialCubeDim = 2;
+float offset, padding = 50;
 int cubeDim, numCubes;
 // coords of blank space
 int bx, by, bz;
@@ -30,6 +32,7 @@ void setup() {
   textFont(f);
   
   // set up variables
+  controls = Controls.MOUSE;
   cubeDim = initialCubeDim;
   setupCubes();
 }
@@ -41,9 +44,14 @@ void draw() {
   pushMatrix();
   // center on bounding cube
   translate(width/2, height/2, -1*boundingSize/2);
-  // control camera with mouse
-  rotateY(map(mouseX, 0, width, -1*PI, PI));
-  rotateX(map(mouseY, 0, height, PI, -1*PI));
+  if (controls != Controls.MOUSE) {
+    // control camera with mouse
+    rotateY(map(mouseX, 0, width, -1*PI, PI));
+    rotateX(map(mouseY, 0, height, PI, -1*PI));
+  } else {
+    rotateY(-PI/8);
+    rotateX(-PI/8);
+  }
   
   // bounding box TBD if keeping maybe an option
   // togglable with debug for now
@@ -83,7 +91,7 @@ void drawHUD(boolean solved) {
   fill(220);
   textAlign(LEFT, BOTTOM);
   textSize(14);
-  text("w, a, s, d, q, e to move\ng to scramble\n\'-' and '+' to change dimensions\nm to turn off debug", 10, height - 10, 0);
+  text("w, a, s, d, q, e to move\ng to scramble\n\'-' and '+' to change dimensions\np to switch between shapes\nm to toggle debug", 10, height - 10, 0);
   popMatrix();
 }
 
@@ -92,6 +100,7 @@ boolean drawCubes() {
   // display all cubes
   int pos = 0;
   boolean solved = true;
+  noStroke();
   for (int x = 0; x < cubeDim; x++) {
     for (int y = 0; y < cubeDim; y++) {
       for (int z = 0; z < cubeDim; z++) {
@@ -102,14 +111,23 @@ boolean drawCubes() {
         if (cubes[x][y][z].isBlank) {
           continue; 
         }
-        stroke(0);    
+           
         fill(cubes[x][y][z].c);
         pushMatrix();
         float xt = -boundingSize/2 + (offset * x) + offset/2;
         float yt = -boundingSize/2 + (offset * y) + offset/2;
         float zt = -boundingSize/2 + (offset * z) + offset/2;
         translate(xt, yt, zt);
-        box(offset - padding);
+        
+        if (spheres) {
+          noStroke();
+          sphere((offset - padding)/2);
+        } else {
+          strokeWeight(1);
+          stroke(255);
+          box(offset - padding);
+        }
+        
         String s = str(x) + "," + str(y) + "," + str(z);
         fill(255);
         if (debug) {
@@ -125,11 +143,13 @@ boolean drawCubes() {
 // draw each layer of the sovled cube from a top down perspective
 // on the right side of the screen.
 void drawReferenceSquares() {
+  // spacing between edges of screen, and between layers
   int spacingBetween = 10;
   pushMatrix();
-  translate(width - refLayerSize*cubeDim - spacingBetween, 0, 0);
+  translate(width - refLayerSize*cubeDim - spacingBetween, spacingBetween, 0);
   rectMode(CORNER);
-  noStroke();
+  stroke(255);
+  strokeWeight(1);
   for (int y = 0; y < cubeDim; y++) {
     for (int x = 0; x < cubeDim; x++) {
       for (int z = 0; z < cubeDim; z++) {
@@ -137,7 +157,7 @@ void drawReferenceSquares() {
           break; 
         }
         fill(cubes[x][y][z].c);
-        rect(x*refLayerSize, z*refLayerSize + (y*refLayerSize*cubeDim + spacingBetween), refLayerSize, refLayerSize);
+        rect(x*refLayerSize, z*refLayerSize + (y*refLayerSize*cubeDim + y*spacingBetween), refLayerSize, refLayerSize);
       }
     }
   }
@@ -177,7 +197,7 @@ void setupCubes() {
         }
         
         // random color for now, TODO experiment with various alphas as well
-        color c = color(int(random(0, 256)), int(random(0, 256)), int(random(0, 256)), 150);
+        color c = color(int(random(0, 256)), int(random(0, 256)), int(random(0, 256)), 255);
         cubes[x][y][z] = new Cube(cubeDim, num, c, isBlank);   
         num++;    
         isBlank = false;
@@ -269,6 +289,20 @@ void keyPressed() {
     scramble(); 
   } else if (key == 'm') {
     debug = !debug; 
+  } else if (key == 'p') {
+   spheres = !spheres; 
+  } else if (key == 'c') {
+   switch (controls) {
+     case Controls.MOUSE:
+       controls = Controls.PLANE;
+     break;
+     case Controls.PLANE:
+       controls = Controls.LINE_AXIS;
+     break;
+     case Controls.LINE_AXIS:
+       controls = Controls.MOUSE;
+     break;
+   }
   }
 }
 
