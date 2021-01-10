@@ -62,10 +62,7 @@ void draw() {
     box(boundingSize);
   }
   
-  // simultaneously draw cubes and check if the puzzle is solved
-  // probably not good to have the solution checker in the draw method
-  // but its technically faster and im not a game developer
-  boolean solved = drawCubes();
+  drawCubes();
   
   // done drawing everything that rotate
   popMatrix();
@@ -73,15 +70,16 @@ void draw() {
   // reference cube looks weird bc of perspective, figure out later
   //drawReferenceCube();
   drawReferenceSquares();
-  drawHUD(solved);
+  drawHUD();
 }
 
 // draw all the text and useful info
 // consider a better name for this method
-void drawHUD(boolean solved) {
+void drawHUD() {
   pushMatrix();
   textAlign(CENTER, CENTER);
   textSize(24);
+  boolean solved = isSolved(); 
   if (solved) {
     fill(0, 255, 0);
     text("solved", width / 2, height - 75, 0);
@@ -96,20 +94,14 @@ void drawHUD(boolean solved) {
   popMatrix();
 }
 
-boolean drawCubes() {
+void drawCubes() {
   textAlign(CENTER, CENTER);
   textSize(24);
   // display all cubes
-  int pos = 0;
-  boolean solved = true;
   noStroke();
   for (int x = 0; x < cubeDim; x++) {
     for (int y = 0; y < cubeDim; y++) {
       for (int z = 0; z < cubeDim; z++) {
-        if (cubes[x][y][z].num != pos) {
-          solved = false; 
-        }
-        pos++;
         if (cubes[x][y][z].isBlank) {
           continue; 
         }
@@ -139,7 +131,6 @@ boolean drawCubes() {
       }
     }
   }
-  return solved;
 }
 
 // draw each layer of the sovled cube from a top down perspective
@@ -307,10 +298,10 @@ void keyPressed() {
 }
 
 boolean isSolved() {
-   int pos = 0;
-   for (int x = 0; x < cubeDim; x++) {
-    for (int y = 0; y < cubeDim; y++) {
-      for (int z = 0; z < cubeDim; z++) {
+   int pos = 1;
+   for (int y = 0; y < cubeDim; y++) {
+    for (int z = 0; z < cubeDim; z++) {
+      for (int x = 0; x < cubeDim; x++) {
         if (cubes[x][y][z].num != pos) {
           return false;
         }
