@@ -15,7 +15,7 @@ int cubeDim, numCubes;
 int bx, by, bz;
 // really not sure about this structure for cubes big TBD over here
 Cube[][][] cubes;
-Cube[] sortedCubes;
+Cube[][][] sortedCubes;
 
 // cube numbering 
 /*
@@ -45,7 +45,7 @@ void draw() {
   pushMatrix();
   // center on bounding cube
   translate(width/2, height/2, -1*boundingSize/2);
-  if (controls != Controls.MOUSE) {
+  if (controls == Controls.MOUSE) {
     // control camera with mouse
     rotateY(map(mouseX, 0, width, -1*PI, PI));
     rotateX(map(mouseY, 0, height, PI, -1*PI));
@@ -98,6 +98,7 @@ void drawHUD(boolean solved) {
 
 boolean drawCubes() {
   textAlign(CENTER, CENTER);
+  textSize(24);
   // display all cubes
   int pos = 0;
   boolean solved = true;
@@ -129,7 +130,7 @@ boolean drawCubes() {
           box(offset - padding);
         }
         
-        String s = str(x) + "," + str(y) + "," + str(z);
+        String s = str(cubes[x][y][z].num);
         fill(255);
         if (debug) {
           text(s, 0, 0, (offset - padding)/2 + 1);
@@ -152,14 +153,17 @@ void drawReferenceSquares() {
   stroke(255);
   strokeWeight(1);
   // need to sort first
-  for (int i = 0; i < sortedCubes.size; i++) {
-     if (cubes[x][y][z].isBlank) {
-       continue; 
-     }
-     fill(cubes[x][y][z].c);
-     rect(x*refLayerSize, z*refLayerSize + (y*refLayerSize*cubeDim + y*spacingBetween), refLayerSize, refLayerSize);
+  for (int y = 0; y < cubeDim; y++) {
+    for (int x = 0; x < cubeDim; x++) {
+      for (int z = 0; z < cubeDim; z++) {
+        if (sortedCubes[x][y][z].isBlank) {
+          continue; 
+        }
+        fill(sortedCubes[x][y][z].c);
+        rect(x*refLayerSize, z*refLayerSize + (y*refLayerSize*cubeDim + y*spacingBetween), refLayerSize, refLayerSize);
+      }
+    }
   }
-  
   popMatrix();
 }
 
@@ -183,13 +187,13 @@ void drawReferenceCube() {
 void setupCubes() {
   offset = boundingSize / cubeDim;
   cubes = new Cube[cubeDim][cubeDim][cubeDim];
-  sortedCubes = new Cube[int(pow(cubeDim, 3))];
-  int num = 0;
+  sortedCubes = new Cube[cubeDim][cubeDim][cubeDim];;
+  int num = 1;
   boolean isBlank = false;
-  for (int x = 0; x < cubeDim; x++) {
-    for (int y = 0; y < cubeDim; y++) {
-      for (int z = 0; z < cubeDim; z++) {
-        if (num == pow(cubeDim, 3) - 1) {
+  for (int y = 0; y < cubeDim; y++) {
+    for (int z = 0; z < cubeDim; z++) {
+      for (int x = 0; x < cubeDim; x++) {
+        if (num == pow(cubeDim, 3)) {
           isBlank = true; 
           bx = x;
           by = y;
@@ -200,7 +204,7 @@ void setupCubes() {
         color c = color(int(random(0, 256)), int(random(0, 256)), int(random(0, 256)), 255);
         Cube temp = new Cube(cubeDim, num, c, isBlank);
         cubes[x][y][z] = temp;   
-        sortedCubes[num] = temp;
+        sortedCubes[x][y][z] = temp;
         num++;    
         isBlank = false;
       }
