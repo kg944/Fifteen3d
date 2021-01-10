@@ -1,7 +1,7 @@
 Controls controls;
 PFont f;
 boolean debug = false;
-boolean spheres = false;
+boolean spheres = true;
 // size of whole puzzle
 int boundingSize = 400;
 // eventually will be a reference cube that rotates with the puzzle
@@ -15,6 +15,7 @@ int cubeDim, numCubes;
 int bx, by, bz;
 // really not sure about this structure for cubes big TBD over here
 Cube[][][] cubes;
+Cube[] sortedCubes;
 
 // cube numbering 
 /*
@@ -150,17 +151,15 @@ void drawReferenceSquares() {
   rectMode(CORNER);
   stroke(255);
   strokeWeight(1);
-  for (int y = 0; y < cubeDim; y++) {
-    for (int x = 0; x < cubeDim; x++) {
-      for (int z = 0; z < cubeDim; z++) {
-        if (cubes[x][y][z].isBlank) {
-          break; 
-        }
-        fill(cubes[x][y][z].c);
-        rect(x*refLayerSize, z*refLayerSize + (y*refLayerSize*cubeDim + y*spacingBetween), refLayerSize, refLayerSize);
-      }
-    }
+  // need to sort first
+  for (int i = 0; i < sortedCubes.size; i++) {
+     if (cubes[x][y][z].isBlank) {
+       continue; 
+     }
+     fill(cubes[x][y][z].c);
+     rect(x*refLayerSize, z*refLayerSize + (y*refLayerSize*cubeDim + y*spacingBetween), refLayerSize, refLayerSize);
   }
+  
   popMatrix();
 }
 
@@ -184,6 +183,7 @@ void drawReferenceCube() {
 void setupCubes() {
   offset = boundingSize / cubeDim;
   cubes = new Cube[cubeDim][cubeDim][cubeDim];
+  sortedCubes = new Cube[int(pow(cubeDim, 3))];
   int num = 0;
   boolean isBlank = false;
   for (int x = 0; x < cubeDim; x++) {
@@ -198,7 +198,9 @@ void setupCubes() {
         
         // random color for now, TODO experiment with various alphas as well
         color c = color(int(random(0, 256)), int(random(0, 256)), int(random(0, 256)), 255);
-        cubes[x][y][z] = new Cube(cubeDim, num, c, isBlank);   
+        Cube temp = new Cube(cubeDim, num, c, isBlank);
+        cubes[x][y][z] = temp;   
+        sortedCubes[num] = temp;
         num++;    
         isBlank = false;
       }
@@ -292,17 +294,11 @@ void keyPressed() {
   } else if (key == 'p') {
    spheres = !spheres; 
   } else if (key == 'c') {
-   switch (controls) {
-     case Controls.MOUSE:
-       controls = Controls.PLANE;
-     break;
-     case Controls.PLANE:
-       controls = Controls.LINE_AXIS;
-     break;
-     case Controls.LINE_AXIS:
-       controls = Controls.MOUSE;
-     break;
-   }
+    if (controls == Controls.MOUSE) {
+      controls = Controls.LINE_AXIS;
+    } else {
+      controls = Controls.MOUSE; 
+    }
   }
 }
 
